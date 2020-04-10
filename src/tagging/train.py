@@ -116,7 +116,9 @@ writer = SummaryWriter(ARGS.working_dir)
 
 print('INITIAL EVAL...')
 model.eval()
-results = tagging_utils.run_inference(model, eval_dataloader, loss_fn, tokenizer)
+# prev: see on the eval data
+# results = tagging_utils.run_inference(model, eval_dataloader, loss_fn, tokenizer)
+results = tagging_utils.run_inference(model, train_dataloader, loss_fn, tokenizer)
 writer.add_scalar('eval/tok_loss', np.mean(results['tok_loss']), 0)
 writer.add_scalar('eval/tok_acc', np.mean(results['labeling_hits']), 0)
 
@@ -132,9 +134,9 @@ for epoch in range(ARGS.epochs):
     model.eval()
     results = tagging_utils.run_inference(model, eval_dataloader, loss_fn, tokenizer)
     ## capture results
-    json = json.dumps(results)
+    json_string = json.dumps(results)
     with open("result_epoch_{}.json".format(epoch),'w') as f:
-        f.write(json)
+        f.write(json_string)
     writer.add_scalar('eval/tok_loss', np.mean(results['tok_loss']), epoch + 1)
     writer.add_scalar('eval/tok_acc', np.mean(results['labeling_hits']), epoch + 1)
 
