@@ -41,7 +41,7 @@ with open(ARGS.working_dir + '/command.sh', 'w') as f:
 
 
 
-
+import json
 # # # # # # # # ## # # # ## # # DATA # # # # # # # # ## # # # ## # #
 
 
@@ -66,10 +66,13 @@ eval_dataloader, num_eval_examples = get_dataloader(
 
 print('BUILDING MODEL...')
 if ARGS.tagger_from_debiaser:
+    print("Ding -- Use Debiaser")
     model = tagging_model.TaggerFromDebiaser(
         cls_num_labels=ARGS.num_categories, tok_num_labels=ARGS.num_tok_labels,
         tok2id=tok2id)
+
 elif ARGS.extra_features_top:
+    print("Ding -- Use extra_features_top")
     model = tagging_model.BertForMultitaskWithFeaturesOnTop.from_pretrained(
             ARGS.bert_model,
             cls_num_labels=ARGS.num_categories,
@@ -77,6 +80,7 @@ elif ARGS.extra_features_top:
             cache_dir=ARGS.working_dir + '/cache',
             tok2id=tok2id)
 elif ARGS.extra_features_bottom:
+    print("Ding -- Use extra_features_bottom")
     model = tagging_model.BertForMultitaskWithFeaturesOnBottom.from_pretrained(
             ARGS.bert_model,
             cls_num_labels=ARGS.num_categories,
@@ -84,6 +88,7 @@ elif ARGS.extra_features_bottom:
             cache_dir=ARGS.working_dir + '/cache',
             tok2id=tok2id)
 else:
+    print("Ding -- Use BertForMultitask")
     model = tagging_model.BertForMultitask.from_pretrained(
         ARGS.bert_model,
         cls_num_labels=ARGS.num_categories,
@@ -126,6 +131,10 @@ for epoch in range(ARGS.epochs):
     print('EVAL...')
     model.eval()
     results = tagging_utils.run_inference(model, eval_dataloader, loss_fn, tokenizer)
+    ## capture results
+    json = json.dumps(results)
+    with open("result_epoch_{}.json".format(epoch),'w') as f:
+        f.write(json)
     writer.add_scalar('eval/tok_loss', np.mean(results['tok_loss']), epoch + 1)
     writer.add_scalar('eval/tok_acc', np.mean(results['labeling_hits']), epoch + 1)
 
